@@ -1,6 +1,6 @@
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, Future, Promise}
 import scala.util.{Failure, Success}
 
 object PromiseStdIn extends App {
@@ -9,11 +9,20 @@ object PromiseStdIn extends App {
     lineInputProcessor(io.StdIn.readLine().toInt)
   }
 
-  val future: Future[Int] = ???
+  val future: Future[Int] = {
+    val promise: Promise[Int] = Promise[Int]
+    applyFromStdIn(i => promise.success(i * 7))
+    promise.future
+  }
 
-  future onComplete {
+  println(future.isCompleted)
+
+  future.onComplete {
     case Success(value) => println(value)
     case Failure(throwable) => throwable.printStackTrace()
   }
+
   Await.result(future, Duration.Inf)
+  println(future.isCompleted)
+
 }
